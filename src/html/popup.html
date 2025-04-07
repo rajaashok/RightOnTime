@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RightOnTime</title>
+    <link href="../css/popup.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo">RoT</div>
+                <h1>RightOnTime</h1>
+            </div>
+            <button id="addDateBtn" class="primary-btn">
+                <span class="btn-icon">+</span> Add
+            </button>
+        </header>
+
+        <div class="dates-container">
+            <div class="dates-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="personal">Personal</button>
+                <button class="filter-btn" data-filter="family">Family</button>
+                <button class="filter-btn urgent" data-filter="urgent">Urgent</button>
+            </div>
+
+            <div id="datesList" class="dates-list">
+                <!-- Dates will be populated here dynamically -->
+                <div class="empty-state-placeholder">
+                    <div class="empty-icon">📅</div>
+                    <p>No dates found</p>
+                    <button id="emptyAddBtn" class="secondary-btn">Add your first date</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Date Modal -->
+        <div id="addDateModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Date</h2>
+                    <button class="close-btn" id="closeModalBtn">&times;</button>
+                </div>
+                <form id="addDateForm">
+                    <div class="form-group">
+                        <label for="dateType">Type</label>
+                        <select id="dateType" required>
+                            <option value="">Select type...</option>
+                            <option value="h1b">H1B</option>
+                            <option value="f1">F1</option>
+                            <option value="opt">OPT</option>
+                            <option value="stemopt">STEM OPT</option>
+                            <option value="visa">Visa Stamping</option>
+                            <option value="i94">I-94</option>
+                            <option value="passport">Passport</option>
+                            <option value="ead">EAD/AP</option>
+                            <option value="dl">Driver's License</option>
+                            <option value="i140">I-140</option>
+                            <option value="i485">I-485</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateFor">For</label>
+                        <select id="dateFor" required>
+                            <option value="self">Self</option>
+                            <option value="spouse">Spouse</option>
+                            <option value="child">Child</option>
+                            <option value="parent">Parent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="personName">Name</label>
+                        <input type="text" id="personName" placeholder="Enter person's name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry/Due Date</label>
+                        <input type="date" id="expiryDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" rows="2" placeholder="Add any important details here..."></textarea>
+                    </div>
+
+                    <div class="form-group notifications">
+                        <label>Notifications</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label"><input type="checkbox" value="90" checked> 90 days before</label>
+                            <label class="checkbox-label"><input type="checkbox" value="60" checked> 60 days before</label>
+                            <label class="checkbox-label"><input type="checkbox" value="30" checked> 30 days before</label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="cancelAdd" class="secondary-btn">Cancel</button>
+                        <button type="submit" class="primary-btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <div class="setting-item">
+                <span class="setting-label">Enable New Tab Dashboard</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="newTabViewToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </footer>
+    </div>
+    <script src="../js/popup.js"></script>
+</body>
+</html> 

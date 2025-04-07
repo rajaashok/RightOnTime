@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RightOnTime</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="../css/newtab.css">
+    <meta http-equiv="Content-Security-Policy" content="style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <header>
+            <div class="brand">
+                <div class="logo">RoT</div>
+                <h1>RightOnTime</h1>
+            </div>
+            <div class="header-actions">
+                <div class="toggle-container" id="toggle-container">
+                    <label for="new-tab-toggle" class="toggle-label">Dashboard on New Tab</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="new-tab-toggle">
+                        <span class="toggle-slider" id="toggle-slider"></span>
+                    </div>
+                </div>
+                <button id="add-date-btn" class="button primary"><span class="button-icon">+</span> Add Date</button>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <!-- Main content - left side -->
+            <div class="main-content">
+                <div id="dates-grid" class="dates-grid">
+                    <!-- Will be populated by JS -->
+                    <div class="loading-placeholder">
+                        <div class="spinner"></div>
+                        <p>Loading your dates...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline - right side -->
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <h2>Family Timeline</h2>
+                </div>
+                <div id="timeline-content" class="timeline-content">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for adding/editing dates -->
+        <div id="date-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Add New Date</h2>
+                    <button id="close-modal-btn" class="close-button">&times;</button>
+                </div>
+                <form id="date-form">
+                    <div class="form-group">
+                        <label for="dateType">Type</label>
+                        <select name="dateType" id="dateType" required>
+                            <option value="">Select type...</option>
+                            <option value="h1b">H1B</option>
+                            <option value="f1">F1</option>
+                            <option value="opt">OPT</option>
+                            <option value="stemopt">STEM OPT</option>
+                            <option value="visa">Visa Stamping</option>
+                            <option value="i94">I-94</option>
+                            <option value="passport">Passport</option>
+                            <option value="ead">EAD/AP</option>
+                            <option value="dl">Driver's License</option>
+                            <option value="i140">I-140</option>
+                            <option value="i485">I-485</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="person">For</label>
+                        <select name="person" id="person" required>
+                            <option value="">Select person...</option>
+                            <option value="self">Self</option>
+                            <option value="spouse">Spouse</option>
+                            <option value="child">Child</option>
+                            <option value="parent">Parent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="personName">Name</label>
+                        <input type="text" name="personName" id="personName" placeholder="Enter person's name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date</label>
+                        <input type="date" name="expiryDate" id="expiryDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea name="notes" id="notes" rows="3" placeholder="Add any details here..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notifications</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="notify90" id="notify90" checked>
+                                90 days
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="notify60" id="notify60" checked>
+                                60 days
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="notify30" id="notify30" checked>
+                                30 days
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="button" id="cancel-btn">Cancel</button>
+                        <button type="submit" class="button primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Feedback message container -->
+        <div id="feedback-message" class="feedback-message"></div>
+    </div>
+    <script src="../js/newtab.js"></script>
+</body>
+</html> 

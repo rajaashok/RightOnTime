@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "RightOnTime",
+  "version": "1.0",
+  "description": "Track and manage immigration dates and deadlines",
+  "permissions": [
+    "storage",
+    "notifications",
+    "alarms",
+    "tabs"
+  ],
+  "action": {
+    "default_popup": "src/html/popup.html",
+    "default_icon": {
+      "16": "src/images/icon16.png",
+      "48": "src/images/icon48.png",
+      "128": "src/images/icon128.png"
+    }
+  },
+  "chrome_url_overrides": {
+    "newtab": "src/html/newtab.html"
+  },
+  "background": {
+    "service_worker": "src/js/background.js"
+  },
+  "icons": {
+    "16": "src/images/icon16.png",
+    "48": "src/images/icon48.png",
+    "128": "src/images/icon128.png"
+  },
+  "web_accessible_resources": [{
+    "resources": [
+      "src/html/*",
+      "src/js/*",
+      "src/css/*",
+      "src/images/*"
+    ],
+    "matches": ["<all_urls>"]
+  }],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
+  }
+} 
