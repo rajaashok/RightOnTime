@@ -49,21 +49,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 return;
             }
             
+            // Update the global variable
+            newTabEnabled = enabled;
+            
             // If this is a new tab page and we're disabling the dashboard
             if (sender.tab && sender.tab.url === 'chrome://newtab/' && !enabled) {
-                // Create a new tab with Google
-                chrome.tabs.create({ url: 'https://www.google.com' }, (tab) => {
+                // Redirect to Google
+                chrome.tabs.update(sender.tab.id, { url: 'https://www.google.com' }, (updatedTab) => {
                     if (chrome.runtime.lastError) {
-                        console.error('RightOnTime: Error creating new tab:', chrome.runtime.lastError);
+                        console.error('RightOnTime: Error updating tab:', chrome.runtime.lastError);
                         sendResponse({ success: false, error: chrome.runtime.lastError });
                         return;
                     }
-                    // Close the current tab
-                    chrome.tabs.remove(sender.tab.id);
+                    sendResponse({ success: true });
                 });
+            } else {
+                sendResponse({ success: true });
             }
-            
-            sendResponse({ success: true });
         });
         return true; // Keep the message channel open for the async response
     }
@@ -83,11 +85,22 @@ chrome.tabs.onCreated.addListener((tab) => {
             const enabled = result.newTabEnabled !== false;
             console.log('RightOnTime: New tab created, dashboard enabled:', enabled);
             
-            if (!enabled) {
-                // Update the new tab to Google
-                chrome.tabs.update(tab.id, { url: 'https://www.google.com' }, (updatedTab) => {
+            if (enabled) {
+                // Load our dashboard
+                chrome.tabs.update(tab.id, { 
+                    url: chrome.runtime.getURL('src/html/newtab.html')
+                }, (updatedTab) => {
                     if (chrome.runtime.lastError) {
-                        console.error('RightOnTime: Error updating tab:', chrome.runtime.lastError);
+                        console.error('RightOnTime: Error loading dashboard:', chrome.runtime.lastError);
+                    }
+                });
+            } else {
+                // Redirect to Google
+                chrome.tabs.update(tab.id, { 
+                    url: 'https://www.google.com'
+                }, (updatedTab) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('RightOnTime: Error redirecting to Google:', chrome.runtime.lastError);
                     }
                 });
             }

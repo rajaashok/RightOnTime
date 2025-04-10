@@ -24,9 +24,6 @@
     "48": "src/images/icon48.png",
     "128": "src/images/icon128.png"
   },
-  "chrome_url_overrides": {
-    "newtab": "src/html/newtab.html"
-  },
   "background": {
     "service_worker": "src/js/background.js"
   },
