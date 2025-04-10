@@ -152,6 +152,94 @@ const blankPageHTML = `
 </html>
 `;
 
+// Create a dashboard HTML page content
+const dashboardHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RightOnTime Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="${chrome.runtime.getURL('src/css/newtab.css')}">
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <header>
+            <div class="logo">RoT</div>
+            <h1>RightOnTime</h1>
+        </header>
+        <div id="dates-grid"></div>
+        <div id="date-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Date</h2>
+                    <button id="close-modal-btn" class="close-button">&times;</button>
+                </div>
+                <form id="date-form">
+                    <div class="form-group">
+                        <label for="dateType">Document Type</label>
+                        <select id="dateType" required>
+                            <option value="">Select a document type</option>
+                            <option value="h1b">H1B</option>
+                            <option value="f1">F1</option>
+                            <option value="opt">OPT</option>
+                            <option value="stemopt">STEM OPT</option>
+                            <option value="visa">Visa Stamping</option>
+                            <option value="i94">I-94</option>
+                            <option value="passport">Passport</option>
+                            <option value="ead">EAD/AP</option>
+                            <option value="dl">Driver's License</option>
+                            <option value="i140">I-140</option>
+                            <option value="i485">I-485</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateFor">For</label>
+                        <select id="dateFor" required>
+                            <option value="">Select who this is for</option>
+                            <option value="self">Self</option>
+                            <option value="spouse">Spouse</option>
+                            <option value="child">Child</option>
+                            <option value="parent">Parent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date</label>
+                        <input type="date" id="expiryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notes (Optional)</label>
+                        <textarea id="notes" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Notifications</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="90"> 90 days before
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="60"> 60 days before
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="30"> 30 days before
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-btn" class="button">Cancel</button>
+                        <button type="submit" class="button primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <button id="add-date-btn" class="button primary">Add Date</button>
+    </div>
+    <script src="${chrome.runtime.getURL('src/js/newtab.js')}"></script>
+</body>
+</html>
+`;
+
 // Listen for tab creation and handle new tab override
 chrome.tabs.onCreated.addListener((tab) => {
     // Only handle new tab pages
@@ -176,7 +264,11 @@ chrome.tabs.onCreated.addListener((tab) => {
             });
         } else {
             console.log('RightOnTime: Dashboard enabled, showing RightOnTime');
-            // Let the manifest handle showing the dashboard
+            
+            // Redirect to our dashboard page
+            chrome.tabs.update(tab.id, { 
+                url: 'data:text/html;charset=utf-8,' + encodeURIComponent(dashboardHTML)
+            });
         }
     });
 });
