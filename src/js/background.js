@@ -33,33 +33,66 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 // Global variable to track current setting
 let newTabEnabled = true;
 
-// Handle messages from popup and newtab
+// Listen for messages from popup and newtab
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('RightOnTime: Received message:', message);
     
     if (message.action === 'toggleNewTab') {
-        // Explicitly convert to boolean
         const enabled = message.enabled === true;
         console.log('RightOnTime: Toggling new tab dashboard:', enabled);
         
-        // Save to storage
+        // Save the setting
         chrome.storage.local.set({ newTabEnabled: enabled }, () => {
             if (chrome.runtime.lastError) {
-                console.error('RightOnTime: Error saving toggle state', chrome.runtime.lastError);
+                console.error('RightOnTime: Error saving setting:', chrome.runtime.lastError);
                 sendResponse({ success: false, error: chrome.runtime.lastError });
                 return;
             }
             
-            console.log('RightOnTime: Toggle state saved to storage');
+            // If this is a new tab page and we're disabling the dashboard
+            if (sender.tab && sender.tab.url === 'chrome://newtab/' && !enabled) {
+                // Create a new tab with Google
+                chrome.tabs.create({ url: 'https://www.google.com' }, (tab) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('RightOnTime: Error creating new tab:', chrome.runtime.lastError);
+                        sendResponse({ success: false, error: chrome.runtime.lastError });
+                        return;
+                    }
+                    // Close the current tab
+                    chrome.tabs.remove(sender.tab.id);
+                });
+            }
+            
             sendResponse({ success: true });
         });
-        
-        // Return true to indicate we'll send a response asynchronously
-        return true;
+        return true; // Keep the message channel open for the async response
     }
     
-    // Default response for unknown actions
     sendResponse({ success: false, error: 'Unknown action' });
+});
+
+// Handle new tab creation
+chrome.tabs.onCreated.addListener((tab) => {
+    if (tab.url === 'chrome://newtab/') {
+        chrome.storage.local.get(['newTabEnabled'], (result) => {
+            if (chrome.runtime.lastError) {
+                console.error('RightOnTime: Error reading setting:', chrome.runtime.lastError);
+                return;
+            }
+            
+            const enabled = result.newTabEnabled !== false;
+            console.log('RightOnTime: New tab created, dashboard enabled:', enabled);
+            
+            if (!enabled) {
+                // Update the new tab to Google
+                chrome.tabs.update(tab.id, { url: 'https://www.google.com' }, (updatedTab) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('RightOnTime: Error updating tab:', chrome.runtime.lastError);
+                    }
+                });
+            }
+        });
+    }
 });
 
 // Initialize storage with default values
@@ -77,33 +110,6 @@ chrome.runtime.onInstalled.addListener(() => {
                 console.log('RightOnTime: Default toggle state set to true');
             });
         }
-    });
-});
-
-// Listen for tab creation and handle new tab override
-chrome.tabs.onCreated.addListener((tab) => {
-    // Only handle new tab pages
-    if (tab.pendingUrl !== 'chrome://newtab/' && tab.url !== 'chrome://newtab/') return;
-    
-    console.log('RightOnTime: New tab created, checking dashboard setting...');
-    
-    // Always check storage for most reliable behavior
-    chrome.storage.local.get(['newTabEnabled'], (result) => {
-        // Default to true if not set, but strictly compare otherwise
-        const showDashboard = result.newTabEnabled === undefined ? true : (result.newTabEnabled === true);
-        
-        // Update memory variable to stay in sync
-        newTabEnabled = showDashboard;
-        
-        if (!showDashboard) {
-            console.log('RightOnTime: Dashboard disabled, showing default new tab page');
-            
-            // Redirect to Google's default new tab page
-            chrome.tabs.update(tab.id, { 
-                url: 'https://www.google.com'
-            });
-        }
-        // If enabled, let the manifest handle showing the dashboard
     });
 });
 

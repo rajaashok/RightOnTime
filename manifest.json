@@ -2,12 +2,14 @@
   "manifest_version": 3,
   "name": "RightOnTime",
   "version": "1.0.0",
-  "description": "Track important dates and get notifications for your immigration journey",
+  "description": "A Chrome extension to manage and track important dates and deadlines",
   "permissions": [
     "storage",
-    "alarms",
-    "notifications",
-    "tabs"
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "chrome://newtab/"
   ],
   "action": {
     "default_popup": "src/html/popup.html",
