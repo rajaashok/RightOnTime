@@ -43,23 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.local.get(['newTabEnabled'], function(result) {
             // Default to true if setting doesn't exist
             newTabToggle.checked = result.newTabEnabled !== false;
+            console.log('RightOnTime: Initial toggle state:', newTabToggle.checked);
             
-            // Add change listener
-            newTabToggle.addEventListener('change', function() {
-                const isEnabled = newTabToggle.checked;
-                
-                // Save to storage
-                chrome.storage.local.set({ newTabEnabled: isEnabled }, function() {
-                    console.log('RightOnTime: New tab dashboard setting updated to:', isEnabled);
-                    
-                    // Notify background script
-                    chrome.runtime.sendMessage({
-                        action: 'toggleNewTab',
-                        enabled: isEnabled
-                    });
-                });
+            // Add change listener with proper event handling
+            newTabToggle.addEventListener('change', function(event) {
+                handleToggleChange(event);
             });
         });
+    } else {
+        console.error('RightOnTime: Toggle element not found in popup');
     }
 
     // Theme setup function
@@ -226,5 +218,71 @@ document.addEventListener('DOMContentLoaded', () => {
             other: 'Other'
         };
         return labels[type] || type;
+    }
+
+    // Function to handle toggle change
+    function handleToggleChange(event) {
+        if (!event || !event.target) {
+            console.error('RightOnTime: Invalid event in handleToggleChange');
+            return;
+        }
+
+        // Explicitly convert to boolean
+        const enabled = event.target.checked === true;
+        console.log('RightOnTime: Toggle changed to', enabled);
+        
+        // Save to storage
+        chrome.storage.local.set({ newTabEnabled: enabled }, () => {
+            if (chrome.runtime.lastError) {
+                console.error('RightOnTime: Error saving toggle state', chrome.runtime.lastError);
+                showFeedback('Error saving setting', 'error');
+                return;
+            }
+            
+            console.log('RightOnTime: Toggle state saved to storage');
+            
+            // Notify background script
+            chrome.runtime.sendMessage({ 
+                action: 'toggleNewTab', 
+                enabled: enabled 
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.error('RightOnTime: Error sending message', chrome.runtime.lastError);
+                    showFeedback('Error updating setting', 'error');
+                    return;
+                }
+                
+                if (response && response.success) {
+                    console.log('RightOnTime: Background script confirmed toggle update');
+                    showFeedback(`Dashboard ${enabled ? 'enabled' : 'disabled'}`, 'success');
+                } else {
+                    console.error('RightOnTime: Background script failed to update toggle');
+                    showFeedback('Error updating setting', 'error');
+                }
+            });
+        });
+    }
+
+    // Function to show feedback message
+    function showFeedback(message, type = 'info') {
+        // Create feedback element if it doesn't exist
+        let feedbackElement = document.getElementById('feedback-message');
+        if (!feedbackElement) {
+            feedbackElement = document.createElement('div');
+            feedbackElement.id = 'feedback-message';
+            document.body.appendChild(feedbackElement);
+        }
+        
+        // Set message and class
+        feedbackElement.textContent = message;
+        feedbackElement.className = `feedback ${type}`;
+        
+        // Show the feedback
+        feedbackElement.style.display = 'block';
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            feedbackElement.style.display = 'none';
+        }, 3000);
     }
 }); 

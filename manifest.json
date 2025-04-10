@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
   "name": "RightOnTime",
-  "version": "1.0",
-  "description": "Track and manage immigration dates and deadlines",
+  "version": "1.0.0",
+  "description": "Track important dates and get notifications for your immigration journey",
   "permissions": [
     "storage",
-    "notifications",
     "alarms",
+    "notifications",
     "tabs"
   ],
   "action": {
@@ -17,19 +17,22 @@
       "128": "src/images/icon128.png"
     }
   },
-  "background": {
-    "service_worker": "src/js/background.js"
-  },
   "icons": {
     "16": "src/images/icon16.png",
     "48": "src/images/icon48.png",
     "128": "src/images/icon128.png"
   },
+  "chrome_url_overrides": {
+    "newtab": "src/html/newtab.html"
+  },
+  "background": {
+    "service_worker": "src/js/background.js"
+  },
   "web_accessible_resources": [{
     "resources": [
       "src/html/*",
-      "src/js/*",
       "src/css/*",
+      "src/js/*",
       "src/images/*"
     ],
     "matches": ["<all_urls>"]

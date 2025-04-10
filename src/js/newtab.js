@@ -133,102 +133,94 @@ function initializeDashboard() {
     };
 }
 
-// Initialize toggle state from storage
+// Initialize toggle state
 function initializeToggleState() {
-    const toggleSwitch = document.getElementById('new-tab-toggle');
-    
+    const toggleSwitch = document.getElementById('newTabToggle');
     if (!toggleSwitch) {
-        console.warn('RightOnTime: Toggle switch element not found');
+        console.error('RightOnTime: Toggle switch element not found');
         return;
     }
-    
+
     chrome.storage.local.get(['newTabEnabled'], (result) => {
-        // Default to true if not set - use the same logic as popup.js
-        const newTabEnabled = result.newTabEnabled !== false;
-        toggleSwitch.checked = newTabEnabled;
-        console.log('RightOnTime: Initialized toggle to', newTabEnabled);
+        if (chrome.runtime.lastError) {
+            console.error('RightOnTime: Error reading toggle state', chrome.runtime.lastError);
+            return;
+        }
+
+        // Default to true if not set
+        const enabled = result.newTabEnabled !== false;
+        console.log('RightOnTime: Initial toggle state:', enabled);
         
-        // Also listen for storage changes to keep in sync with popup
-        chrome.storage.onChanged.addListener((changes, area) => {
-            if (area === 'local' && changes.newTabEnabled) {
-                const newValue = changes.newTabEnabled.newValue;
-                console.log('RightOnTime: Toggle value changed externally to', newValue);
-                toggleSwitch.checked = newValue !== false;
+        toggleSwitch.checked = enabled;
+    });
+}
+
+// Handle toggle change
+function handleToggleChange(event) {
+    if (!event || !event.target) {
+        console.error('RightOnTime: Invalid event object');
+        return;
+    }
+
+    const enabled = event.target.checked === true;
+    console.log('RightOnTime: Toggle changed to:', enabled);
+
+    // Save to storage
+    chrome.storage.local.set({ newTabEnabled: enabled }, () => {
+        if (chrome.runtime.lastError) {
+            console.error('RightOnTime: Error saving toggle state', chrome.runtime.lastError);
+            showFeedback('Failed to save toggle state', 'error');
+            return;
+        }
+
+        // Notify background script
+        chrome.runtime.sendMessage({ 
+            action: 'toggleNewTab', 
+            enabled: enabled 
+        }, (response) => {
+            if (chrome.runtime.lastError) {
+                console.error('RightOnTime: Error sending message', chrome.runtime.lastError);
+                showFeedback('Failed to update toggle state', 'error');
+                return;
+            }
+
+            if (response && response.success) {
+                showFeedback(enabled ? 'Dashboard enabled' : 'Dashboard disabled', 'success');
+            } else {
+                console.error('RightOnTime: Failed to update toggle state', response?.error);
+                showFeedback('Failed to update toggle state', 'error');
             }
         });
     });
 }
 
-// Setup all event listeners
-function setupEventListeners() {
-    console.log('RightOnTime: Setting up event listeners');
+// Show feedback message
+function showFeedback(message, type = 'info') {
+    const feedback = document.createElement('div');
+    feedback.className = `feedback-message ${type}`;
+    feedback.textContent = message;
     
-    try {
-        // Add Date button
-        setupButtonListener('add-date-btn', openAddModal, 'Add date button');
+    document.body.appendChild(feedback);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        feedback.remove();
+    }, 3000);
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    const toggleSwitch = document.getElementById('newTabToggle');
+    if (toggleSwitch) {
+        // Remove any existing listeners
+        const newToggle = toggleSwitch.cloneNode(true);
+        toggleSwitch.parentNode.replaceChild(newToggle, toggleSwitch);
         
-        // Toggle switch for new tab dashboard - USE DIRECT BINDING INSTEAD OF HELPER
-        const toggleSwitch = document.getElementById('new-tab-toggle');
-        const toggleContainer = document.getElementById('toggle-container');
-        const toggleSlider = document.getElementById('toggle-slider');
-        
-        if (toggleSwitch) {
-            console.log('RightOnTime: Found toggle switch, attaching DIRECT event listener');
-            
-            // Remove any existing listeners (in case of duplication)
-            toggleSwitch.removeEventListener('change', handleToggleChange);
-            toggleSwitch.removeEventListener('click', handleToggleClick);
-            
-            // Add both change and click listeners for redundancy
-            toggleSwitch.addEventListener('change', handleToggleChange);
-            toggleSwitch.addEventListener('click', handleToggleClick);
-            
-            // Make the whole container and slider clickable
-            if (toggleContainer) {
-                toggleContainer.addEventListener('click', function(e) {
-                    // Only toggle if the click wasn't directly on the checkbox
-                    // (because that's already handled)
-                    if (e.target !== toggleSwitch) {
-                        console.log('RightOnTime: Container clicked, toggling checkbox');
-                        toggleSwitch.checked = !toggleSwitch.checked;
-                        
-                        // Manually trigger change event
-                        const changeEvent = new Event('change');
-                        toggleSwitch.dispatchEvent(changeEvent);
-                    }
-                });
-                
-                console.log('RightOnTime: Added container click handler');
-            }
-            
-            console.log('RightOnTime: Multiple toggle switch listeners added');
-            
-            // Force toggle state check with click simulation
-            console.log('RightOnTime: Initial toggle state:', toggleSwitch.checked);
-        } else {
-            console.warn('RightOnTime: Toggle switch not found');
-        }
-        
-        // Modal form submission
-        setupFormListener('date-form', 'Form submission');
-        
-        // Close modal button
-        setupButtonListener('close-modal-btn', closeModal, 'Close modal button');
-        
-        // Cancel button
-        setupButtonListener('cancel-btn', closeModal, 'Cancel button');
-        
-        // Close modal when clicking outside
-        setupModalOutsideClickListener();
-        
-        // Setup grid click handlers
-        setupGridClickHandlers();
-        
-        // Setup timeline click handlers
-        setupTimelineClickHandlers();
-        
-    } catch (error) {
-        console.error('RightOnTime: Error setting up event listeners', error);
+        // Add new listener
+        newToggle.addEventListener('change', handleToggleChange);
+        console.log('RightOnTime: Toggle event listener added');
+    } else {
+        console.error('RightOnTime: Toggle switch element not found');
     }
 }
 
@@ -365,121 +357,6 @@ function handleToggleClick(event) {
     
     // Let the change event handler take over from here
     // This function ensures the click is registered
-}
-
-// Handle toggle switch change
-function handleToggleChange(event) {
-    console.log('RightOnTime: Toggle CHANGE event fired');
-    
-    // Get the toggle element directly in case the event is weird
-    const toggleSwitch = document.getElementById('new-tab-toggle');
-    if (!toggleSwitch) {
-        console.error('RightOnTime: Toggle element not found in change handler');
-        return;
-    }
-    
-    // Explicitly convert to boolean and get directly from the element
-    const enabled = toggleSwitch.checked === true;
-    
-    console.log('RightOnTime: Toggle changed to', enabled, 'Element checked:', toggleSwitch.checked);
-    
-    try {
-        // Show immediate feedback (before storage completes)
-        showFeedbackMessage(`Dashboard on New Tab ${enabled ? 'enabled' : 'disabled'} (saving...)`);
-        
-        // Save setting to storage
-        chrome.storage.local.set({ newTabEnabled: enabled }, () => {
-            // Check for errors
-            if (chrome.runtime.lastError) {
-                console.error('RightOnTime: Error saving toggle state', chrome.runtime.lastError);
-                alert('Error saving setting. Please try again.');
-                // Revert toggle state in UI to match storage
-                setTimeout(() => initializeToggleState(), 100);
-                return;
-            }
-            
-            console.log(`RightOnTime: New tab dashboard ${enabled ? 'enabled' : 'disabled'} - saved to storage`);
-            
-            // Show updated feedback to the user
-            showFeedbackMessage(`Dashboard on New Tab ${enabled ? 'enabled' : 'disabled'}`);
-            
-            // Notify the background script about the change
-            notifyBackgroundScript(enabled);
-        });
-    } catch (error) {
-        console.error('RightOnTime: Error in toggle change handler', error);
-        alert('An error occurred. Please try again.');
-        // Revert toggle state in UI to match storage
-        setTimeout(() => initializeToggleState(), 100);
-    }
-}
-
-// Helper function to show feedback message
-function showFeedbackMessage(message) {
-    try {
-        // Remove any existing feedback messages first
-        const existingFeedback = document.querySelector('.feedback-message');
-        if (existingFeedback) {
-            document.body.removeChild(existingFeedback);
-        }
-        
-        // Create new feedback element
-        const feedbackEl = document.createElement('div');
-        feedbackEl.className = 'feedback-message';
-        feedbackEl.textContent = message;
-        feedbackEl.style.position = 'fixed';
-        feedbackEl.style.top = '10px';
-        feedbackEl.style.right = '10px';
-        feedbackEl.style.padding = '8px 12px';
-        feedbackEl.style.background = message.includes('enabled') ? 'var(--success)' : 'var(--gray-600)';
-        feedbackEl.style.color = 'white';
-        feedbackEl.style.borderRadius = '4px';
-        feedbackEl.style.zIndex = '9999';
-        feedbackEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-        document.body.appendChild(feedbackEl);
-        
-        // Remove the feedback after 3 seconds
-        setTimeout(() => {
-            feedbackEl.style.opacity = '0';
-            feedbackEl.style.transition = 'opacity 0.5s';
-            
-            // Remove from DOM after fade out
-            setTimeout(() => {
-                if (feedbackEl.parentNode) {
-                    document.body.removeChild(feedbackEl);
-                }
-            }, 500);
-        }, 3000);
-    } catch (error) {
-        console.error('RightOnTime: Error showing feedback', error);
-    }
-}
-
-// Helper function to notify background script
-function notifyBackgroundScript(enabled) {
-    try {
-        chrome.runtime.sendMessage({ 
-            action: 'toggleNewTab', 
-            enabled: enabled 
-        }, (response) => {
-            if (chrome.runtime.lastError) {
-                console.log('RightOnTime: Background script communication error', chrome.runtime.lastError);
-                return;
-            }
-            
-            if (response && response.success) {
-                console.log('RightOnTime: Background script acknowledged toggle change');
-                
-                // If disabled, tell user what's happening
-                if (!enabled) {
-                    // Don't use alert here, as the page will be redirected
-                    console.log('RightOnTime: Redirecting to Chrome default new tab page');
-                }
-            }
-        });
-    } catch (error) {
-        console.error('RightOnTime: Error sending message to background script', error);
-    }
 }
 
 // Modal Functions
